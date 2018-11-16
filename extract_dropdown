@@ -1,0 +1,69 @@
+        protected void RuntimeFileExtract()
+        {
+            try
+            {
+                string userId = Convert.ToString(Session["UserID"]);
+              //  DataSet ds = bal.GetAllMasters(userId);
+                DataSet ds = APICall.GetAPIJsonResponse<DataSet>("api/RequestUpload/GetAllMaster?Userid='" + userId + "'");
+                string FilePath = @"~/Download/PCT_REQUEST_TEMPLATE.xlsx";  //ConfigurationManager.AppSettings["RequestUploadFormatPath"].ToString() + "PCT_REQUEST_FORMAT.xlsx";
+
+                var ExistFile = Server.MapPath(FilePath);
+                var File = new FileInfo(ExistFile);
+                using (ExcelPackage pck = new ExcelPackage(File))
+                {
+                    var workSheet = pck.Workbook.Worksheets["Masters"];
+                    workSheet.Cells[1, 1].LoadFromDataTable(ds.Tables[0], true);
+                    workSheet.Cells[1, 2].LoadFromDataTable(ds.Tables[1], true);
+                    workSheet.Cells[1, 3].LoadFromDataTable(ds.Tables[2], true);
+                    workSheet.Cells[1, 4].LoadFromDataTable(ds.Tables[3], true);
+                    workSheet.Cells[1, 9].LoadFromDataTable(ds.Tables[4], true);
+
+                    workSheet.Cells.AutoFitColumns();
+                    //AccountingHeadMaster
+                    //EntityMaster
+                    //ExpLobMaster
+                    //VendorMaster
+
+                    ExcelNamedRange range1 = pck.Workbook.Names["AccountingHeadMaster"];
+                    range1.Offset(1, 1, ds.Tables[0].Rows.Count, 1);
+                    
+
+                    ExcelNamedRange range2 = pck.Workbook.Names["EntityMaster"];
+                    range2.Offset(1, 2, ds.Tables[1].Rows.Count, 1);
+
+                    ExcelNamedRange range3 = pck.Workbook.Names["ExpLobMaster"];
+                    range3.Offset(1, 3, ds.Tables[2].Rows.Count, 1);
+
+                    ExcelNamedRange range4 = pck.Workbook.Names["VendorMaster"];
+                    range4.Offset(1, 4, ds.Tables[3].Rows.Count, 1);
+
+                    ExcelNamedRange range5 = pck.Workbook.Names["LobMaster"];
+                    range4.Offset(1, 9, ds.Tables[4].Rows.Count, 1);
+
+
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                        Response.AddHeader("content-disposition", "attachment;  filename=PCT_REQUEST_FORMAT.xlsx");
+                        pck.SaveAs(memoryStream);
+                        memoryStream.WriteTo(Response.OutputStream);
+                        Response.Flush();
+                        Response.End();
+
+                        //Response.ClearContent();
+                        //Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                        //Response.AddHeader("content-disposition", "attachment;  filename=PCT_REQUEST_FORMAT_ERROR.xlsx");
+                        //pck.SaveAs(memoryStream);
+                        //memoryStream.WriteTo(Response.OutputStream);
+                        //Response.Flush();
+                        //HttpContext.Current.ApplicationInstance.CompleteRequest();
+                        //Response.Close();
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
